@@ -2,7 +2,7 @@
 
 # Penpot Complete Build Script - Builds everything using containers
 # This script uses Docker to build all bundles and Docker images without requiring
-# local dependencies (Node.js, Clojure, Rust, etc.)
+# local dependencies (Node.js, pnpm, Clojure, Rust, etc.)
 #
 # Usage:
 #   ./build-all.sh [OPTIONS]
@@ -115,14 +115,17 @@ FROM ${DEVENV_IMAGE} AS builder
 
 WORKDIR /workspace
 
-# Copy frontend source
+# Copy frontend source and lock files
 COPY frontend/ ./frontend/
 COPY common/ ./common/
+COPY pnpm-workspace.yaml ./
+COPY pnpm-lock.yaml ./
 
 WORKDIR /workspace/frontend
 
-# Build frontend
-RUN npm install && npm run build:dist
+# Build frontend using pnpm with CI mode enabled
+ENV CI=true
+RUN pnpm install --frozen-lockfile && pnpm run build:dist
 
 # Output stage
 FROM scratch
@@ -234,14 +237,17 @@ FROM ${DEVENV_IMAGE} AS builder
 
 WORKDIR /workspace
 
-# Copy exporter source
+# Copy exporter source and lock files
 COPY exporter/ ./exporter/
 COPY common/ ./common/
+COPY pnpm-workspace.yaml ./
+COPY pnpm-lock.yaml ./
 
 WORKDIR /workspace/exporter
 
-# Build exporter
-RUN npm install && npm run build
+# Build exporter using pnpm with CI mode enabled
+ENV CI=true
+RUN pnpm install --frozen-lockfile && pnpm run build
 
 # Output stage
 FROM scratch
@@ -295,13 +301,16 @@ FROM ${DEVENV_IMAGE} AS builder
 
 WORKDIR /workspace
 
-# Copy MCP source
+# Copy MCP source and lock files
 COPY mcp/ ./mcp/
+COPY pnpm-workspace.yaml ./
+COPY pnpm-lock.yaml ./
 
 WORKDIR /workspace/mcp
 
-# Build MCP
-RUN npm install && npm run build
+# Build MCP using pnpm with CI mode enabled
+ENV CI=true
+RUN pnpm install --frozen-lockfile && pnpm run build
 
 # Output stage
 FROM scratch
